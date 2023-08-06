@@ -30,7 +30,7 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
 
-  Serial.println("Starting...");
+  Serial.println("\nStarting");
 
   WiFi.begin(WIFI_SSID, WIFI_PASS);        //Connect to the WiFi network
   while (WiFi.status() != WL_CONNECTED) {  //Wait for connection
@@ -80,14 +80,25 @@ void handleCommand(String command) {
 }
 
 void setupSSDP(String deviceName) {
-  Serial.println("Setup SSDP");
-
   //SSDP makes device visible on windows network
   server.on("/description.xml", HTTP_GET, [&]() {
-    Serial.println("SSDP - Serving description.xml");
     SSDP.schema(server.client());
   });
-  SSDP.setSchemaURL("description.xml");
+
+  // Handle unknown requests (including SSDP requests)
+  server.onNotFound([&]() {
+    Serial.println("SSDP - Serving description.xml");
+    String message = "File Not Found\n\n";
+    message += "URI: " + server.uri() + "\n";
+    message += "Method: " + String(server.method() == HTTP_GET ? "GET" : "POST") + "\n"; // Convert to String
+    message += "Arguments: " + String(server.args()) + "\n"; // Convert uint8_t to String
+    for (uint8_t i = 0; i < server.args(); i++) {
+      message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
+    }
+    server.send(404, "text/plain", message);
+  });
+
+  SSDP.setSchemaURL("/description.xml"); // Corrected here
   SSDP.setHTTPPort(80);
   SSDP.setName(deviceName);
   SSDP.setModelName("esp8266");
