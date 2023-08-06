@@ -98,7 +98,7 @@ void setupSSDP(String deviceName) {
     server.send(404, "text/plain", message);
   });
 
-  SSDP.setSchemaURL("/description.xml"); // Corrected here
+  SSDP.setSchemaURL("description.xml"); // Corrected here
   SSDP.setHTTPPort(80);
   SSDP.setName(deviceName);
   SSDP.setModelName("esp8266");
